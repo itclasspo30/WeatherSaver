@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+   <head>
+      <meta charset="UTF-8" />
+      <title>Weather Page</title>
+      <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+   </head>
+   <body>
+      <h1>Take and save the weather:</h1>
+      
+      <table>
+            <tr>
+                <th>Name</th>
+                <th>Temperature</th>
+                <th>Pressure</th>
+                <th>Humidity</th>
+                <th>Clouds</th>
+            </tr>
+            
+            <tr >
+                <td th:text="${newBox.name}">Name</td>
+                <td th:text="${newBox.temp}">Temperature</td>
+                <td th:text="${newBox.pressure}">Pressure</td>
+                <td th:text="${newBox.humidity}">Humidity</td>
+                <td th:text="${newBox.clouds}">Clouds</td>
+            </tr>
+        </table>
+        <br/>
+        <table>
+            <tr>
+                <td>
+                    <form th:action="@{/takeWeather}" th:object="${newBox}" method="POST">
+                    <input type="submit" value="Get The Weather" />
+                    </form>
+                </td>
+                <td>
+                    <form th:action="@{/saveWeather}" th:object="${newBox}" method="POST">
+                    <input type="submit" value="Save This Weather" />
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <br/>
+        <p th:text="${text}" />
+   </body>
+</html>
