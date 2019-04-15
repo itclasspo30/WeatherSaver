@@ -1,0 +1,5 @@
+{"properties": [{
+  "name": "spring.rabbitmq.listener.acknowledge-mode",
+  "type": "java.lang.String",
+  "description": "A description for 'spring.rabbitmq.listener.acknowledge-mode'"
+}]}

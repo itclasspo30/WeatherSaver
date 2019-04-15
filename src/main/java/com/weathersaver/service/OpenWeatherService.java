@@ -1,6 +1,9 @@
 package com.weathersaver.service;
 
+import java.util.ArrayList;
+import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,39 +20,52 @@ public class OpenWeatherService {
 	private AmqpTemplate rabbitTemplate;
 	
 	
-	public WeatherBox readTheWeather()
-	{
+	public List<WeatherBox> getForecast(){
+	
 		int cityID = 627907;  // ID of Hamyel
 		String appID = "6982f55dc0a69c8b8a5c113ddf293277";
 	    	
-		final String url = "http://api.openweathermap.org/data/2.5/weather?id=" + cityID + "&mode=json&units=metric&APPID=" + appID;
+		final String url = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityID + "&mode=json&units=metric&APPID=" + appID;
 	    RestTemplate restTemplate = new RestTemplate();
 	    JSONObject obj = new JSONObject(restTemplate.getForObject(url, String.class));
 	    
-	    String cityName = obj.getString("name");
-	    double temp = obj.getJSONObject("main").getDouble("temp");
-	    int pressure = obj.getJSONObject("main").getInt("pressure");
-	    int humidity = obj.getJSONObject("main").getInt("humidity");
-	    int clouds = obj.getJSONObject("clouds").getInt("all");
+	    JSONArray jArray = obj.getJSONArray("list");
 	    
-	    WeatherBox newBox = new WeatherBox(cityName, temp, pressure, humidity, clouds);
+	    String name;
+	    double temp;
+	    double pressure;
+	    int humidity;
+	    int clouds;
+	    String timestamp;
 	    
-	    //System.out.println("Taken data: " + cityName +" "+ temp +" "+ humidity +" "+ pressure +" "+ clouds);
+	    name = obj.getJSONObject("city").getString("name");
 	    
-	    return newBox;
+	    List<WeatherBox> weatherList = new ArrayList<WeatherBox>();
 	    
+	    if (jArray != null) { 
+	       for (int i = 0; i < jArray.length(); i++){ 
+	    	   temp = jArray.getJSONObject(i).getJSONObject("main").getDouble("temp");
+	    	   pressure = jArray.getJSONObject(i).getJSONObject("main").getDouble("pressure");
+	    	   humidity = jArray.getJSONObject(i).getJSONObject("main").getInt("humidity");
+	    	   clouds = jArray.getJSONObject(i).getJSONObject("clouds").getInt("all");
+	    	   timestamp = jArray.getJSONObject(i).getString("dt_txt");
+	    		   
+	    	   WeatherBox newBox = new WeatherBox(name, temp, pressure, humidity, clouds, timestamp);
+	    	   weatherList.add(newBox);
+	       } 
+	    }  
+	    return weatherList;
 	}
 	
 		
-	    //@Value("")
-		private String exchange = "myExchange";
-		//@Value("")
-		private String routingkey  = "myQueue";
+	//@Value("")
+	private String exchange = "myExchange";
+	//@Value("")
+	private String routingkey  = "myQueue";
 		
-		public WeatherBox sendToSave(WeatherBox newBox) {
-			rabbitTemplate.convertAndSend(exchange, routingkey, newBox);
-		
-		return newBox;
+	public void sendToSave(List<WeatherBox> weatherList) {
+		rabbitTemplate.convertAndSend(exchange, routingkey, weatherList);
+	    return;
 	}
 	
 }
