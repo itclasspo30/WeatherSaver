@@ -16,20 +16,20 @@ import com.weathersaver.beans.WeatherBox;
 
 @Component
 public class AddDataListener {
-	
-	@Autowired
-	DataBaseService dataBaseService;
-	
+
+    @Autowired
+    DataBaseService dataBaseService;
+
     static final Logger logger = LoggerFactory.getLogger(AddDataListener.class);
- 
+
     @RabbitListener(queues = "myQueue")
-    public void process(ArrayList<WeatherBox> newList, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException{
-    	    	
-    	if (newList != null) {
-    		boolean result = dataBaseService.addNew(newList);
-    		if (result) {
-    			channel.basicAck(tag, false);
-    		}
+    public void process(ArrayList<WeatherBox> newList, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag)
+            throws IOException {
+        if (newList != null) {
+            boolean result = dataBaseService.addNew(newList);
+            if (!result) {
+                channel.basicNack(tag, false, true);
+            }
         }
     }
 }

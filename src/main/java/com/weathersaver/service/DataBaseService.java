@@ -12,41 +12,53 @@ import com.weathersaver.beans.WeatherBox;
 
 @Service
 public class DataBaseService {
-	
-	@Autowired
+    
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
-	
-	public boolean addNew(ArrayList<WeatherBox> newList) {
-		
-		//getting last item from database
-		Map<String, Object> targetMap = jdbcTemplate.queryForMap("SELECT * FROM weather_forecast WHERE id = (SELECT MAX(id) FROM weather_forecast)");
-		int sumRes = 0;
-		
-		if (targetMap != null) {
-			int curRes = 0;
-			String stringTimestamp = (String)targetMap.get("timestamp");
-			Timestamp lastTimestamp = Timestamp.valueOf(stringTimestamp);
-			
-			for(WeatherBox newBox : newList) {
-				Timestamp actualTimestamp = Timestamp.valueOf(newBox.getTimestamp());
-				if (lastTimestamp.compareTo(actualTimestamp) >= 0 ) {
-					curRes = jdbcTemplate.update("UPDATE weather_forecast SET name = ?, temp = ?, pressure = ?, humidity = ?, clouds = ? WHERE timestamp = ?", 
-							       newBox.getName(), newBox.getTemp(), newBox.getPressure(), newBox.getHumidity(), newBox.getClouds(), newBox.getTimestamp());
-					sumRes = sumRes + curRes;
-				} else {
-					curRes = jdbcTemplate.update("INSERT INTO weather_forecast (name, temp, pressure, humidity, clouds, timestamp) VALUES (?, ?, ?, ?, ?, ?)", 
-	    		    	           newBox.getName(), newBox.getTemp(), newBox.getPressure(), newBox.getHumidity(), newBox.getClouds(), newBox.getTimestamp());
-					sumRes = sumRes + curRes;
-				}
-			}
-		} else {
-			int curRes = 0;
-            for(WeatherBox newBox : newList) {
-	    	    curRes = jdbcTemplate.update("INSERT INTO weather_forecast (name, temp, pressure, humidity, clouds, timestamp) VALUES (?, ?, ?, ?, ?, ?)", 
-	    	 	        newBox.getName(), newBox.getTemp(), newBox.getPressure(), newBox.getHumidity(), newBox.getClouds(), newBox.getTimestamp());
-	    	    sumRes = sumRes + curRes;
-			}  
-		}
-		return sumRes == newList.size();
+
+    private static final String IS_EXIST_QUERY = "SELECT count(*) FROM weather_forecast WHERE name = ?";
+
+    private static final String SELECT_LAST_QUERY = "SELECT * FROM weather_forecast "
+            + "WHERE id = (SELECT MAX(id) FROM weather_forecast WHERE name = ?)";
+    private static final String UPDATE_QUERY = "UPDATE weather_forecast "
+            + "SET temp = ?, pressure = ?, humidity = ?, clouds = ? WHERE timestamp = ? AND name = ?";
+    private static final String INSERT_QUERY = "INSERT INTO weather_forecast "
+            + "(name, temp, pressure, humidity, clouds, timestamp) VALUES (?, ?, ?, ?, ?, ?)";
+    
+
+    public boolean addNew(ArrayList<WeatherBox> newList) {
+        
+        int sumRes = 0;
+
+        Map<String, Object> isExistMap = jdbcTemplate.queryForMap(IS_EXIST_QUERY, newList.get(0).getName());
+        if ((long) isExistMap.get("count") > 0) {
+
+            int curRes = 0;
+            Map<String, Object> targetMap = jdbcTemplate.queryForMap(SELECT_LAST_QUERY, newList.get(0).getName());
+            String stringTimestamp = (String) targetMap.get("timestamp");
+            Timestamp lastTimestamp = Timestamp.valueOf(stringTimestamp);
+
+            for (WeatherBox newBox : newList) {
+                Timestamp actualTimestamp = Timestamp.valueOf(newBox.getTimestamp());
+                if (lastTimestamp.compareTo(actualTimestamp) >= 0) {
+                    curRes = jdbcTemplate.update(UPDATE_QUERY, newBox.getTemp(), newBox.getPressure(),
+                            newBox.getHumidity(), newBox.getClouds(), newBox.getTimestamp(), newBox.getName());
+                    sumRes = sumRes + curRes;
+                } else {
+                    curRes = jdbcTemplate.update(INSERT_QUERY, newBox.getName(), newBox.getTemp(), newBox.getPressure(),
+                            newBox.getHumidity(), newBox.getClouds(), newBox.getTimestamp());
+                    sumRes = sumRes + curRes;
+                }
+            }
+        } else {
+            int curRes = 0;
+            for (WeatherBox newBox : newList) {
+                curRes = jdbcTemplate.update(INSERT_QUERY, newBox.getName(), newBox.getTemp(), newBox.getPressure(),
+                        newBox.getHumidity(), newBox.getClouds(), newBox.getTimestamp());
+                sumRes = sumRes + curRes;
+            }
+        }
+        return sumRes == newList.size();
     }
 }

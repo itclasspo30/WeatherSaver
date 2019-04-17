@@ -1,48 +1,57 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
-   <head>
-      <meta charset="UTF-8" />
-      <title>Weather Forecast Page</title>
-      <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
-   </head>
-   <body>
-      <h1>Take and save the weather:</h1>
-      
-      <table>
-            <tr>
-                <th>Name</th>
-                <th>Temperature</th>
-                <th>Pressure</th>
-                <th>Humidity</th>
-                <th>Clouds</th>
-                <th>Date vs Time</th>
-            </tr>
-            
-            <tr th:each="newBox : ${newList}">
-                <td th:text="${newBox.name}">Name</td>
-                <td th:text="${newBox.temp}">Temperature</td>
-                <td th:text="${newBox.pressure}">Pressure</td>
-                <td th:text="${newBox.humidity}">Humidity</td>
-                <td th:text="${newBox.clouds}">Clouds</td>
-                <td th:text="${newBox.timestamp}">Date vs Time</td>
-            </tr>
-        </table>
-        <br/>
-        <table>
-            <tr>
-                <td>
-                    <form th:action="@{/takeWeather}" th:object="${newList}" method="POST">
-                    <input type="submit" value="Get The Weather" />
-                    </form>
-                </td>
-                <td>
-                    <form th:action="@{/saveWeather}" th:object="${newList}" method="POST">
-                    <input type="submit" value="Save This Weather" />
-                    </form>
-                </td>
-            </tr>
-        </table>
-        <br/>
-        <p th:text="${text}" />
-   </body>
+<head>
+<meta charset="UTF-8" />
+<title>Weather Forecast Page</title>
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
+</head>
+<body>
+	<h1>Take and save the weather:</h1>
+
+	<table BORDER=1 CELLPADDING=10>
+		<tr>
+			<td th:each="newList : ${forecastList}">
+				<table CELLPADDING=5>
+				    <tr>
+                    <th colspan="5" th:text="${newList.get(0).name}">Name</th>
+                    </tr>
+					<tr>
+						<th>Temp</th>
+						<th>Pressure</th>
+						<th>Humidity</th>
+						<th>Clouds</th>
+						<th>Date vs Time</th>
+					</tr>
+					<tr th:each="newBox : ${newList}">
+						<td th:text="${newBox.temp}">Temperature</td>
+						<td th:text="${newBox.pressure}">Pressure</td>
+						<td th:text="${newBox.humidity}">Humidity</td>
+						<td th:text="${newBox.clouds}">Clouds</td>
+						<td th:text="${newBox.timestamp}">Date vs Time</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+
+	<br />
+	<table>
+		<tr>
+			<td>
+				<form th:action="@{/takeWeather}" th:object="${forecastList}"
+					method="POST">
+					<input type="submit" value="Get The Weather" />
+				</form>
+			</td>
+			<td>
+				<form th:action="@{/saveWeather}" th:object="${forecastList}"
+					method="POST">
+					<input type="submit" value="Save This Weather" />
+				</form>
+			</td>
+		</tr>
+	</table>
+	<br />
+	<p th:text="${text}" />
+</body>
 </html>
