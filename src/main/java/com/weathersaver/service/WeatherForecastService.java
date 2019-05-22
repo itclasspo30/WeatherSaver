@@ -17,47 +17,63 @@ public class WeatherForecastService {
 
     @Autowired
     private AmqpTemplate rabbitTemplate;
+    
+    
 
     public List<WeatherBox> getForecast(String cityID) {
 
-        String appID = "6982f55dc0a69c8b8a5c113ddf293277";
+        synchronized (WeatherForecastService.class) {
+            
+            String appID = "6982f55dc0a69c8b8a5c113ddf293277";
 
-        final String url = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityID
-                + "&mode=json&units=metric&APPID=" + appID;
-        RestTemplate restTemplate = new RestTemplate();
-        JSONObject obj = new JSONObject(restTemplate.getForObject(url, String.class));
+            final String url = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityID
+                    + "&mode=json&units=metric&APPID=" + appID;
+            RestTemplate restTemplate = new RestTemplate();
 
-        JSONArray jArray = obj.getJSONArray("list");
+            long startTime = System.currentTimeMillis();
+            JSONObject obj = new JSONObject(restTemplate.getForObject(url, String.class));
+            long stopTime = System.currentTimeMillis();
 
-        String name;
-        double temp;
-        double pressure;
-        int humidity;
-        int clouds;
-        String timestamp;
-
-        name = obj.getJSONObject("city").getString("name");
-
-        List<WeatherBox> weatherList = new ArrayList<WeatherBox>();
-
-        if (jArray != null) {
-            for (int i = 0; i < jArray.length(); i++) {
-                temp = jArray.getJSONObject(i).getJSONObject("main").getDouble("temp");
-                pressure = jArray.getJSONObject(i).getJSONObject("main").getDouble("pressure");
-                humidity = jArray.getJSONObject(i).getJSONObject("main").getInt("humidity");
-                clouds = jArray.getJSONObject(i).getJSONObject("clouds").getInt("all");
-                timestamp = jArray.getJSONObject(i).getString("dt_txt");
-
-                WeatherBox newBox = new WeatherBox(name, temp, pressure, humidity, clouds, timestamp);
-                weatherList.add(newBox);
+            try {
+                Thread.sleep(1000 - (stopTime - startTime));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        }
-        return weatherList;
-    }
 
-    // @Value("")
+            JSONArray jArray = obj.getJSONArray("list");
+
+            String name;
+            double temp;
+            double pressure;
+            int humidity;
+            int clouds;
+            String timestamp;
+
+            name = obj.getJSONObject("city").getString("name");
+
+            List<WeatherBox> weatherList = new ArrayList<WeatherBox>();
+
+            if (jArray != null) {
+                for (int i = 0; i < jArray.length(); i++) {
+                    temp = jArray.getJSONObject(i).getJSONObject("main").getDouble("temp");
+                    pressure = jArray.getJSONObject(i).getJSONObject("main").getDouble("pressure");
+                    humidity = jArray.getJSONObject(i).getJSONObject("main").getInt("humidity");
+                    clouds = jArray.getJSONObject(i).getJSONObject("clouds").getInt("all");
+                    timestamp = jArray.getJSONObject(i).getString("dt_txt");
+
+                    WeatherBox newBox = new WeatherBox(name, temp, pressure, humidity, clouds, timestamp);
+                    weatherList.add(newBox);
+                }
+            }
+            return weatherList;
+
+        }
+
+    }
+    
+    
+    
     private String exchange = "myExchange";
-    // @Value("")
     private String routingkey = "myQueue";
 
     public void sendToSave(List<WeatherBox> weatherList) {
